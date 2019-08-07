@@ -1,0 +1,8 @@
+# Caches #
+##########
+__pycache__/
+*.vscode/
+
+# Files #
+#########
+details.txt
