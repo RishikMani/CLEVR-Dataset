@@ -5,10 +5,10 @@ import random
 import shutil
 import utils
 import cv2
-import tensorflow as tf
 import numpy as np
 import logging
-from data_2 import ClevrDataLoader, get_data
+import matplotlib.pyplot as plt
+from data import ClevrDataLoader, get_data
 from models.baselines import LstmModel, CnnLstmModel, CnnLstmSaModel
 from tensorflow.keras import optimizers
 from tensorflow.keras.utils import to_categorical
@@ -84,8 +84,8 @@ parser.add_argument('--classifier_dropout', default=0, type=float)
 
 '''Arguments: Optimization options'''
 parser.add_argument('--batch_size', default=64, type=int)
-parser.add_argument('--num_iterations', default=100000, type=int)
-parser.add_argument('--learning_rate', default=5e-4, type=float)
+parser.add_argument('--num_iterations', default=2, type=int)
+parser.add_argument('--learning_rate', default=1e-3, type=float)
 parser.add_argument('--reward_decay', default=0.9, type=float)
 
 '''Arguments: Output options'''
@@ -98,6 +98,8 @@ parser.add_argument('--checkpoint_every', default=10000, type=int)
 
 
 class LossAndErrorPrintingCallback(Callback):
+    """A custom callback class to print accuracy at batch end"""
+
     def on_train_batch_end(self, batch, logs=None):
         print('Accuracy: {} Loss: {}'.format(logs['acc'], logs['loss']))
 
@@ -237,7 +239,7 @@ def train_loop(args, vocab, train_loader, val_loader):
                                  load_weights_on_restart=True)
 
     '''
-    Initial image size is (224, 224, 3). Resize them to (24,24,3)
+    Initial image size is (224, 224, 3). Resize them to (28,28,3)
     '''
     width = 28
     height = 28
@@ -247,9 +249,12 @@ def train_loop(args, vocab, train_loader, val_loader):
     train_images = []
     val_images = []
 
-    for image in sorted(os.listdir(args.train_images)):
-        image = cv2.imread(os.path.join(args.train_images, image))
-        image = cv2.resize(image, dim)
+    for train_image in sorted(os.listdir(args.train_images)):
+        train_image = cv2.imread(os.path.join(args.train_images, train_image),
+                                 cv2.IMREAD_COLOR)
+        train_image = cv2.resize(train_image, dim)
+        train_image = cv2.normalize(train_image, None, alpha=0, beta=1,
+                                    norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
 
         '''
         every image has 10 questions. So the question tensor is of the shape
@@ -258,18 +263,22 @@ def train_loop(args, vocab, train_loader, val_loader):
         same image 10 times to the image dataset.
         '''
         for i in range(10):
-            train_images.append(image)
+            train_images.append(train_image)
 
-    for image in sorted(os.listdir(args.val_images)):
-        image = cv2.imread(os.path.join(args.val_images, image))
-        image = cv2.resize(image, dim)
+    for val_image in sorted(os.listdir(args.val_images)):
+        val_image = cv2.imread(os.path.join(args.val_images, val_image),
+                               cv2.IMREAD_COLOR)
+        val_image = cv2.resize(val_image, dim)
+        val_image = cv2.normalize(val_image, None, alpha=0, beta=1,
+                                  norm_type=cv2.NORM_MINMAX, dtype=cv2.CV_32F)
+
         for i in range(10):
-            val_images.append(image)
+            val_images.append(val_image)
 
     train_images = np.asarray(train_images, dtype=np.float32)
     val_images = np.asarray(val_images, dtype=np.float32)
 
-    while t < args.num_iterations:
+    for i in range(args.num_iterations):
         epoch += 1
         print('Starting epoch %d' % epoch)
         reward = None
@@ -282,27 +291,37 @@ def train_loop(args, vocab, train_loader, val_loader):
                 inputs = [train_questions, train_images]
                 validation_data = [val_questions, val_images]
 
-            scores = baseline_model.fit(
+            history = baseline_model.fit(
                 inputs,
                 to_categorical(train_answers),
                 batch_size=args.batch_size,
-                epochs=50,
+                epochs=3,
                 verbose=0,
                 validation_data=(validation_data, to_categorical(val_answers)),
                 callbacks=[LossAndErrorPrintingCallback(), checkpoint])
 
-        baseline_model.save_weights(args.model_save_path)
+    baseline_model.save_weights(args.model_save_path)
 
+    '''list all data in history'''
+    print(history.history.keys())
 
-def get_state(m):
-    if m is None:
-        return None
+    '''summarize history for accuracy'''
+    plt.plot(history.history['acc'])
+    plt.plot(history.history['val_acc'])
+    plt.title('model accuracy')
+    plt.ylabel('accuracy')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
 
-    state = {}
-    for key, value in m.state_dict().items():
-        state[key] = value.clone()
-
-    return state
+    '''summarize history for loss'''
+    plt.plot(history.history['loss'])
+    plt.plot(history.history['val_loss'])
+    plt.title('model loss')
+    plt.ylabel('loss')
+    plt.xlabel('epoch')
+    plt.legend(['train', 'test'], loc='upper left')
+    plt.show()
 
 
 def check_accuracy(args, program_generator, execution_engine,
