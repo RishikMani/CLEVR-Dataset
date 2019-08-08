@@ -15,26 +15,20 @@ from tensorflow.keras.utils import to_categorical
 from tensorflow.keras.preprocessing.sequence import pad_sequences
 from tensorflow.keras.callbacks import EarlyStopping, Callback, ModelCheckpoint
 
-logging.getLogger('tensorflow').disabled = True
-
 parser = argparse.ArgumentParser()
 
 '''Arguments: Input data'''
 parser.add_argument('--train_question_h5',
-                    default='../output/questions/train_questions.h5')
+                    default='../features/questions_features/train_questions.h5')
 parser.add_argument('--train_features_h5',
-                    default='../output/features/train_features.h5')
+                    default='../features/image_features/train_features.h5')
 parser.add_argument('--val_question_h5',
-                    default='../output/questions/val_questions.h5')
+                    default='../features/questions_features/val_questions.h5')
 parser.add_argument('--val_features_h5',
-                    default='../output/features/val_features.h5')
-parser.add_argument('--vocab_json', default='../output/vocab.json')
-parser.add_argument('--train_images',
-                    default='../../clevr-dataset-gen/output/train/images',
-                    type=str)
-parser.add_argument('--val_images',
-                    default='../../clevr-dataset-gen/output/val/images',
-                    type=str)
+                    default='../features/image_features/val_features.h5')
+parser.add_argument('--vocab_json', default='../features/vocab.json')
+parser.add_argument('--train_images', default='../input/train/images', type=str)
+parser.add_argument('--val_images', default='../input/val/images', type=str)
 parser.add_argument('--loader_num_workers', default=1, type=int)
 parser.add_argument('--use_local_copies', default=0, type=int)
 parser.add_argument('--cleanup_local_copies', default=0, type=int)
@@ -88,9 +82,9 @@ parser.add_argument('--learning_rate', default=1e-3, type=float)
 parser.add_argument('--reward_decay', default=0.9, type=float)
 
 '''Arguments: Output options'''
-parser.add_argument('--model_save_path', default='../data/model.h5')
-parser.add_argument('--model_dir', default='../data/')
-parser.add_argument('--checkpoint_path', default='../data/checkpoint.pt')
+parser.add_argument('--model_save_path', default='../output/model.h5')
+parser.add_argument('--model_dir', default='../output/')
+parser.add_argument('--checkpoint_path', default='../output/checkpoint.pt')
 parser.add_argument('--randomize_checkpoint_path', type=int, default=0)
 parser.add_argument('--record_loss_every', type=int, default=1)
 parser.add_argument('--checkpoint_every', default=10000, type=int)
