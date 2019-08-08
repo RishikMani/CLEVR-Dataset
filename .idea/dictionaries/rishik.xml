@@ -1,0 +1,27 @@
+<component name="ProjectDictionaryState">
+  <dictionary name="rishik">
+    <words>
+      <w>accs</w>
+      <w>batchify</w>
+      <w>batchnorm</w>
+      <w>clevr</w>
+      <w>crossentropy</w>
+      <w>dataloader</w>
+      <w>dataloaders</w>
+      <w>dataset</w>
+      <w>datasets</w>
+      <w>delim</w>
+      <w>downsample</w>
+      <w>idxs</w>
+      <w>lstm</w>
+      <w>maxpool</w>
+      <w>preds</w>
+      <w>preprocess</w>
+      <w>proj</w>
+      <w>punct</w>
+      <w>relu</w>
+      <w>tensorflow</w>
+      <w>wordvec</w>
+    </words>
+  </dictionary>
+</component>
